@@ -102,3 +102,5 @@ void cleanup() {
 	}
 ```
 
+Si corres el programa te tiene que aparecer algo como esto: 
+<img src="./multimedia/pictures/extension_support.webp" alt="Banner del Proyecto" width="600px" />
