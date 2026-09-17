@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <vector>
 
 const uint32_t WIDTH = 1240;
 const uint32_t HEIGHT = 720;
@@ -62,6 +63,20 @@ private:
 			throw std::runtime_error("failed to create instance!");
 		}
 
+		uint32_t extensionCount = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+		std::vector <VkExtensionProperties> extensions(extensionCount);
+
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+
+		std::cout << "available extension:\n ";
+
+		for (const auto& extension : extensions) {
+			std::cout << '\t' << extension.extensionName << '\n';
+		}
+
+
 	}
 
 	void mainLoop() {
@@ -70,6 +85,7 @@ private:
 		}
 	}
 	void cleanup() {
+		vkDestroyInstance(instance, nullptr);
 		glfwDestroyWindow(window);
 		glfwTerminate();
 	}
