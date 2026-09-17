@@ -57,6 +57,11 @@ private:
 		createInfo.enabledLayerCount = 0;
 
 		VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
+
+		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create instance!");
+		}
+
 	}
 
 	void mainLoop() {
