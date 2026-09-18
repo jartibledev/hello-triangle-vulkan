@@ -11,6 +11,17 @@
 const uint32_t WIDTH = 1240;
 const uint32_t HEIGHT = 720;
 
+const std::vector < const char*> validationLayers = {
+	"VK_LAYER_HRONOS_validation"
+};
+
+#ifdef NDEBUG
+	const bool enableValidationLayers = false;
+#else 
+	const bool enableValidationLAyers = true;
+#endif
+
+
 class HelloTriangleApplication {
 public: 
 	void run() {
@@ -77,6 +88,16 @@ private:
 		}
 
 
+	}
+	bool checkValidationLayerSupport() {
+		uint32_t layerCount;
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+		std::vector<VkLayerProperties> availablelayers(layerCount);
+
+		vkEnumerateInstanceLayerProperties(&layerCount, availablelayers.data());
+
+		return false;
 	}
 
 	void mainLoop() {
