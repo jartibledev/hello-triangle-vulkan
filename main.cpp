@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 const uint32_t WIDTH = 1240;
@@ -97,7 +98,21 @@ private:
 
 		vkEnumerateInstanceLayerProperties(&layerCount, availablelayers.data());
 
-		return false;
+		for (const char* layerName : validationLayers) {
+			bool layerFound = false;
+
+			for (const auto& layerProperties : availablelayers) {
+				if (strcmp(layerName, layerProperties.layerName) == 0) {
+					layerFound = true;
+					break;
+				}
+			}
+			if (!layerFound) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	void mainLoop() {
