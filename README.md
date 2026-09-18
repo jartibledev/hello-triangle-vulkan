@@ -104,3 +104,57 @@ void cleanup() {
 
 Si corres el programa te tiene que aparecer algo como esto: 
 <img src="./multimedia/pictures/extension_support.webp" alt="Banner del Proyecto" width="600px" />
+
+## Validation Layers
+El debug son bloques de código que se encargan de avisarnos cuando hay un error en el programa.
+Las *validation layers* son componentes que tienen *hooks* (métodos abiertos que pueden ser escritos por las subclases) dentro de las llamadas
+a las funciones de vulkan para aplicar operaciones adicionales en el caso de llamada.
+### Using validation layers
+Para activar las *validation layers* necesitamos especificar su nombre. Todas las *validation layers*
+están en `VK_LAYER_KHRONOS_validation`.
+
+```c++
+const std::vector < const char*> validationLayers = {
+	"VK_LAYER_HRONOS_validation"
+};
+
+#ifdef NDEBUG
+	const bool enableValidationLayers = false;
+#else 
+	const bool enableValidationLayers = true;
+#endif
+```
+Añadimos una nueva función `checkValidationSupport` que checkea si todas las respuestas están disponibles.
+Primero crea una lista de todas las capas disponibles usando `vkEnumerateLayerProperties`.
+```c++
+bool checkValidationLayerSupport() {
+		uint32_t layerCount;
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+		std::vector<VkLayerProperties> availablelayers(layerCount);
+
+		vkEnumerateInstanceLayerProperties(&layerCount, availablelayers.data());
+
+		 return false;
+}
+```
+El siguiente paso es revisar si todas las capas en `validationlayers` existen en la lista de `avilableLayers`. Podrías necesitar 
+incluir `<cstring>` para `strcmp` .
+```c++
+for (const char* layerName : validationLayers) {
+			bool layerFound = false;
+
+			for (const auto& layerProperties : availablelayers) {
+				if (strcmp(layerName, layerProperties.layerName) == 0) {
+					layerFound = true;
+					break;
+				}
+			}
+			if (!layerFound) {
+				return false;
+			}
+		}
+
+		return true;
+}
+```
