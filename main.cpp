@@ -138,6 +138,17 @@ private:
 		return extensions;
 	}
 
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallBack(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData) {
+
+		std::cerr << "validation layer: " << pCallbackData
+			-> pMessage << std::endl;
+
+		return VK_FALSE;
+	}
+
 	void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
