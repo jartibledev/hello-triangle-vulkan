@@ -203,4 +203,17 @@ std::vector<const char*> getRequiredExtensions() {
 ```
 Devolverá una lista de extensiones basada en cualquier *validation_layer*, esté disponible o no.
 
+Llama a `getRequiredExtension()` desde `createInstance()`:
+```c++
+if (enableValidationLayers) {
+			auto extensions = getRequiredExtensions(); //llamada de la función
+			createInfo.enabledLayerCount = static_cast <uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+		}
+		else {
+			createInfo.enabledLayerCount = 0;
+		}
+```
+
+
 
