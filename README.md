@@ -178,3 +178,29 @@ if (enableValidationLayers) {
 			createInfo.enabledLayerCount = 0;
 }
 ```
+
+### Message Callback
+Las *validation layer* imprimen mensajes de *debug* estándar por defecto, pero podemos también configurarlas por nuestra cuenta 
+creando un *callback* explícito en nuestro programa, lo que nos permitirá decidir que tipo de mensajes nos gustaría ver, 
+ya que todos no son necesariamente errores fatales.
+
+Con la extensión `VK_EXT_debug_utils` nos permitirá montar un *callback* een el programa para manejar los mensajes y obtener los detalles asociados.
+
+Creamos la función `getRequiredExtensions`:
+```c++
+std::vector<const char*> getRequiredExtensions() {
+		uint32_t glfwExtensionsCount = 0;
+		const char** glfwExtensions = 0;
+		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
+
+		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionsCount);
+
+		if (enableValidationLayers) {
+			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		}
+		return extensions;
+	}
+```
+Devolverá una lista de extensiones basada en cualquier *validation_layer*, esté disponible o no.
+
+
