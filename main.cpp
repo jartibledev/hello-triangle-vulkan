@@ -16,6 +16,7 @@ const std::vector < const char*> validationLayers = {
 	"VK_LAYER_HRONOS_validation"
 };
 
+
 #ifdef NDEBUG
 	const bool enableValidationLayers = false;
 #else 
@@ -78,8 +79,6 @@ private:
 			createInfo.enabledLayerCount = 0;
 		}
 
-		
-
 		VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
 
 		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
@@ -98,9 +97,8 @@ private:
 		for (const auto& extension : extensions) {
 			std::cout << '\t' << extension.extensionName << '\n';
 		}
-
-
 	}
+
 	bool checkValidationLayerSupport() {
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -124,6 +122,19 @@ private:
 		}
 
 		return true;
+	}
+
+	std::vector<const char*> getRequiredExtensions() {
+		uint32_t glfwExtensionsCount = 0;
+		const char** glfwExtensions = 0;
+		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
+
+		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionsCount);
+
+		if (enableValidationLayers) {
+			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		}
+		return extensions;
 	}
 
 	void mainLoop() {

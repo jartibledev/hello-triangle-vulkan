@@ -158,3 +158,23 @@ for (const char* layerName : validationLayers) {
 		return true;
 }
 ```
+
+Implementamos esta función en `createInstance`:
+```c++
+void createInstance() {
+		if (enableValidationLayers && !checkValidationLayerSupport()) {
+			throw std::runtime_error("validation layers requested, but not available!");
+		}
+		...
+}
+```
+Finalmente, mdoificamos el  struct `VkInstanceCreateInfo` para incluir los nombres de las *validation layers* si están disponibles:
+```c++
+if (enableValidationLayers) {
+			createInfo.enabledLayerCount = static_cast <uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+		}
+		else {
+			createInfo.enabledLayerCount = 0;
+}
+```
