@@ -215,5 +215,51 @@ if (enableValidationLayers) {
 		}
 ```
 
+Añade una nueva función llamada `debugCallback` con el prototipo `PFN_vkDebugUtilsMessengerCallbackEXT`. La `VKAPI_ATTR` y `VKAPI_CALL` aseguran que la función tiene una firma correcta de Vulkan para poder llamarla.
+```c++ 
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallBack(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData) {
+
+		std::cerr << "validation layer: " << pCallbackData
+			-> pMessage << std::endl;
+
+		return VK_FALSE;
+	}
+```
+
+El primer parámetro de la función, `VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity`, especifica la gravedad del mensaje. Estas son las siguientes macro que tiene este argumento:
+
+- `VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT`: ofrece un mensaje de diagnóstico.
+- `VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT`: da un mensaje informativo como la creación de un recurso.
+- `VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT`: lanza un mensaje acerca del comportamiento. No es necesariamente un error, sino un *bug* en la aplicación.
+- `VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT`: muestra un mensaje acerca de un comportamiento inválido y que puede causar *crasheos*.
+
+El siguiente condicional es un ejemplo de como usar los macros en un condicional, notese que usamos un `>=` para indicar que es menor que `messageSeverity` con lo que podemos deducir que es un valor numérico:
+
+```c++
+if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT){
+	//important message
+}
+```
+
+El segundo parámetro, `VkDebugUtilsMessageTypeFlagsEXT messageType`, corresponde con el mensaje en sí:
+
+- `VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT`: avisa sobre un evento que acaba de ocurrir sin relación con la especificación o la *perfomance*.
+- `VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT`: alerta sobre algo que ha ocurrido que ha violado las especificaciones o indica un posible error.
+- `VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT`: advierte sobre un potencial uso no óptimo de Vulkan.
+
+El tercer parámetro `pCallbackData` es el nombre del *struct* `VKDebugUtilMessengerCallbackDateEXT` que contiene detalles del mensaje en sí, cuyos más importantes miembros son:
+
+- `pMessage`: el mensaje *debug* como un *null-terminated string*.
+- `pObjects`: *Array* de Vulkan object que maneja el mensaje.
+- `objectCount`: Número de objetos en *array*.
+
+El cuarto parámetro `void* pUserData` contiene un puntero que especifica la configuración de la llamada y permite que pases tus propios datos.
+
+Las *callbacks* devuelven un booleano que indica si la llamada de Vulkan que advirtió el mensaje de la *validation layer* debería abortarse.
+Si el valor es `TRUE`, la llamada es cancelada con el error `VK_ERROR_VALIDATION_FAILED_EXT`. Solo se usa para el test de *validation layer* , así que devuelve `VK_FALSE`.
+
 
 
