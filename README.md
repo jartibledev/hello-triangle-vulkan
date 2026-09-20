@@ -316,4 +316,13 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
 		}
 }
 ```
+La función `vKGetInstanceProcAddr` devolverá `nullptr` si la función no puede ser cargada. Podemos llamarla para crear una extensión de objeto si está disponible:
+ ```c++
+ if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+			throw std::runtime_error("failed to set up debug messenger!");
+}
+```
+Ya que el *debug messenger* esta especificado en nuestra instancia de Vulkan y sus capas, necesita estar 
+explícitamente especificado como primer argumento. Verás este mismo patrón en otros hijos más adelante.
+
 
