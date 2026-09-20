@@ -35,6 +35,7 @@ public:
 private:
 	GLFWwindow* window;
 	VkInstance instance;
+	VkDebugUtilsMessengerEXT debugMessenger;
 
 	void initWindow() {
 		glfwInit();
@@ -45,6 +46,13 @@ private:
 	}
 	void initVulkan() {
 		createInstance();
+		setupDebugMessenger();
+
+	}
+
+	void setupDebugMessenger() {
+		if (!enableValidationLayers) return;
+
 	}
 	void createInstance() {
 		if (enableValidationLayers && !checkValidationLayerSupport()) {
