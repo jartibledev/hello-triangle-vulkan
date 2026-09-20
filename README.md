@@ -299,4 +299,21 @@ createInfo.pUserData = nullptr;
 `pfnUserCallback` especifica un puntero para la función del *callback*.
 `pUserData` es opcional. Pasa un puntero para el `pUSerData`. Podrías usarlo para pasar un puntero a la clase `HelloTriangleApplication`, por ejemplo.
 
+Este *struct* debería pasarse por una función `vkCreateDebugUtilsMessengerEXT` para crear el objeto `VkDEbugUtilsMessengerEXT` .
+Esta función se carga automáticamente ya que es una *extension function*. Tenemos que desbloquer su acceso
+nosotros mismos usando `vkGetInstanceProcAddr`. Vamos a crear nuestra propia función *proxy* que maneja este *background*. La añadimos justo fuera de la definición de la clase `HelloTriangleApplication`
+```c++
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
+		const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+		const VkAllocationCallbacks* pAllocator,
+		VkDebugUtilsMessengerEXT* pDebugMessenger) {
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+		if (func != nullptr) {
+			return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+		}
+		else {
+			return VK_ERROR_EXTENSION_NOT_PRESENT;
+		}
+}
+```
 

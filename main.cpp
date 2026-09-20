@@ -23,7 +23,7 @@ const std::vector < const char*> validationLayers = {
 	const bool enableValidationLayers = true;
 #endif
 
-	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
 		const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
 		const VkAllocationCallbacks* pAllocator,
 		VkDebugUtilsMessengerEXT* pDebugMessenger) {
