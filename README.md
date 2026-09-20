@@ -343,5 +343,16 @@ void DestroyDebugUtilsMessengerEXT(
 ```
 `vkGetInstanceProcAddr` busca el acceso del objeto `vkDebugUtilsMessengerEXt`.
 
+Ahora podemos llamarla desde `cleanup`:
+```c++
+void cleanup() {
+		if (enableValidationLayers) {
+			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+		}
+		vkDestroyInstance(instance, nullptr);
+		glfwDestroyWindow(window);
+		glfwTerminate();
+}
+```
 
 
