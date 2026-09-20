@@ -123,6 +123,8 @@ private:
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pApplicationInfo = &appInfo;
 
+		
+
 		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions;
 
@@ -132,13 +134,22 @@ private:
 
 		createInfo.ppEnabledExtensionNames = glfwExtensions;
 
+		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+
 		if (enableValidationLayers) {
 			auto extensions = getRequiredExtensions();
 			createInfo.enabledLayerCount = static_cast <uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
+
+			populateDebugMessengerCreateInfo(debugCreateInfo);
+
+			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+
+
 		}
 		else {
 			createInfo.enabledLayerCount = 0;
+			createInfo.pNext = nullptr;
 		}
 
 		VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
