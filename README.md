@@ -186,6 +186,7 @@ ya que todos no son necesariamente errores fatales.
 
 Con la extensión `VK_EXT_debug_utils` nos permitirá montar un *callback* een el programa para manejar los mensajes y obtener los detalles asociados.
 
+#### Creamos la función *callback*
 Creamos la función `getRequiredExtensions`:
 ```c++
 std::vector<const char*> getRequiredExtensions() {
@@ -417,3 +418,11 @@ void createInstance() {
 	}
 ```
 
+La variable `debugCreateInfo` es colocada fuera del *if* para asegurarnos de que no sea destruida
+antes de la llamada de `vkCreateInstance`. Debido a que hemos creado un adicional *debug messenger*, podrá automáticamente ser usado durante `vkCreateInstance` y `vkDestroyInstance` y limpiado después de todo.
+
+### Resumen
+Las *validation layers* son capas que ayudan a captar errores que puedan surgir a en la creación de la instancia. 
+Usamos los *callback messages* para personalizar nuestros avisos. Para ello cogemos una lista de extensiones de las *validation layers*
+para poder usarlas, luego creamos la función del *callback* en sí para configurar el tipo de mensaje y su grado de importancia.
+Llamamos a la *callback*.Y como todo proceso en `c++`, limpiamos la instancia del *debugging*.
