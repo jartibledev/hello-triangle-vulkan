@@ -282,6 +282,21 @@ void initVulkan() {
 ```
 
 Necesitamos rellenar el *struct* con los detalles acerca del *messenger* y de sus llamadas:
-
+```c++
+VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+	VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+	VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+	VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+	VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+createInfo.pfnUserCallback = debugCallback;
+createInfo.pUserData = nullptr;
+```
+`messageSeverity` te permite especificar todos los tipos de grados en el aviso por los que quieras que tu *callback* sea llamado.
+`messageType` deja filtres que tipo de mensajes te puede notificar tu *callback*.
+`pfnUserCallback` especifica un puntero para la función del *callback*.
+`pUserData` es opcional. Pasa un puntero para el `pUSerData`. Podrías usarlo para pasar un puntero a la clase `HelloTriangleApplication`, por ejemplo.
 
 
