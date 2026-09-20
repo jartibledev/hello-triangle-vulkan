@@ -261,5 +261,27 @@ El cuarto parámetro `void* pUserData` contiene un puntero que especifica la conf
 Las *callbacks* devuelven un booleano que indica si la llamada de Vulkan que advirtió el mensaje de la *validation layer* debería abortarse.
 Si el valor es `TRUE`, la llamada es cancelada con el error `VK_ERROR_VALIDATION_FAILED_EXT`. Solo se usa para el test de *validation layer* , así que devuelve `VK_FALSE`.
 
+#### Llamando al Callback
+Añade un miembro de clase para manejar el *message callback* justamente debajo de `intance`:
+```c++
+VkDebugUtilsMessengerEXT debugMessenger;
+```
+
+Añade la función `setupDebugMessenger`  para ser llamada de `initVulkan()` justo después de `createInstance`:
+```c++
+void initVulkan() {
+		createInstance();
+		setupDebugMessenger();
+
+	}
+
+	void setupDebugMessenger() {
+		if (!enableValidationLayers) return;
+
+	}
+```
+
+Necesitamos rellenar el *struct* con los detalles acerca del *messenger* y de sus llamadas:
+
 
 
