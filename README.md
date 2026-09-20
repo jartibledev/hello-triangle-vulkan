@@ -325,4 +325,23 @@ La función `vKGetInstanceProcAddr` devolverá `nullptr` si la función no puede se
 Ya que el *debug messenger* esta especificado en nuestra instancia de Vulkan y sus capas, necesita estar 
 explícitamente especificado como primer argumento. Verás este mismo patrón en otros hijos más adelante.
 
+El objeto `VkDebugUtilsMessengerEXT` también necesita ser limpiado con una llamada a `vkDestroyDebugUtilsMessengerEXT`.
+Similarmente con `vkCreateDebugUtilsMessengerEXT` la función necesita ser explícitamente cargada.
+
+Crea otra función *proxy* justamente después de `CreateDebugUtilsMessengerEXT`:
+```c++
+void DestroyDebugUtilsMessengerEXT(
+	VkInstance instance,
+	VkDebugUtilsMessengerEXT debugMessenger,
+	const VkAllocationCallbacks* pAllocator) {
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "VkDestroyDebugUtilsMessengerEXT");
+
+	if (func != nullptr) {
+		func(instance, debugMessenger, pAllocator);
+	}
+}
+```
+`vkGetInstanceProcAddr` busca el acceso del objeto `vkDebugUtilsMessengerEXt`.
+
+
 
