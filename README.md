@@ -356,3 +356,64 @@ void cleanup() {
 ```
 
 
+### Creación y destrucción de la instancia *debugging*
+Aunque hemos añadido un *debugging* con *validation layers*, aún faltan cosas por añadir. La llamada a `vKCreateDebugUtilsMessengerEXT`
+requiere una instancia válida para ser creada y `DestroyDebugUtilsMessengerEXT` debe ser llamada antes de que la instancia sea destruida.
+Esto nos deja algunos problemas en las llamadas de `vKCreateInstance` y `vkDestroyInstance`.
+
+Según la documentación de Vulkan, hay una manera de crear un *debug* para estas dos funciones. Requiere que pases un *pointer* al *struct* `VkDebugUtilsMessengerCreateInfoEXT` en el campo `pNext` de `VkInstanceCreateInfo`.
+Primero extrae el contenido del *messenger* en una función aparte:
+```c++
+void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+		createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		createInfo.pfnUserCallback = debugCallback;
+	}
+```
+En la función `setDebugMessenger` añadimos:
+```c++
+void setupDebugMessenger() {
+		if (!enableValidationLayers) return;
+
+		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+
+		populateDebugMessengerCreateInfo(createInfo);
+		
+		if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+			throw std::runtime_error("failed to set up debug messenger!");
+		}
+		...
+}
+```
+La reutilizamos en la función `createInstance`:
+``` c++
+void createInstance() {
+	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+
+	if (enableValidationLayers) {
+		auto extensions = getRequiredExtensions();
+		createInfo.enabledLayerCount = static_cast <uint32_t>(validationLayers.size());
+		createInfo.ppEnabledLayerNames = validationLayers.data();
+
+		populateDebugMessengerCreateInfo(debugCreateInfo);
+
+		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+
+
+	}
+	else {
+		createInfo.enabledLayerCount = 0;
+		createInfo.pNext = nullptr;
+	}
+	...
+	if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create instance!");
+	}
+```
+
