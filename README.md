@@ -456,3 +456,45 @@ private:
 	VkDebugUtilsMessengerEXT debugMessenger;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 ```
+Listamos las tarjetas gráficas en `pickPhysicalDevice`. Inicializamos `deviceCount` con un valor de 0 por defecto, ya que albergará el número de dispositivos que
+`vkEnumeratePhysicalDevices` le pase. `vKEnumeratePhysicalDevices` se dedica simplemente a consultar si hay algún dispositivo que soporte Vulkan:
+```c++
+uint32_t deviceCount = 0;
+vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+```
+Si hay 0 dispositivos disponibles que soporten Vulkan entonces lanzaremos un error:
+```c++
+
+if (deviceCount == 0) {
+	throw std::runtime_error("failed to find GPUs with Vulkan support!");
+}
+```
+Por otro lado, podemos alojar un *array* para sostener todos los manejadores de `VkPhysicalDevice`:
+
+```c++
+std::vector<VkPhysicalDevice> devices(deviceCount);
+vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+```
+
+Ahora necesitamos evaluar cada uno de esos manejadores y revisar si son adecuados para las operaciones
+que queremos hacer, ya que no todas las tarjetas gráficas son creadas igual:
+```c++
+bool isDeviceSuitable(VkPhysicalDevice device) {
+		return true;
+}
+```
+Y necesitamos checkear si alguno de lso dispositivos encuentran los requerimientos que hemos añadido para la función:
+```c++
+for (const auto& device : devices) {
+		if (isDeviceSuitable(device)) {
+			physicalDevice = device;
+			break;
+		}
+	}
+
+	if (physicalDevice == VK_NULL_HANDLE) {
+		throw std::runtime_error("failed to find a suitable GPU!");
+	}
+}
+```
+
