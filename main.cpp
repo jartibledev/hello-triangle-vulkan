@@ -71,6 +71,11 @@ private:
 	void initVulkan() {
 		createInstance();
 		setupDebugMessenger();
+		pickPhysicalDevice();
+	}
+
+
+	void pickPhysicalDevice() {
 
 	}
 
