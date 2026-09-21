@@ -115,7 +115,7 @@ están en `VK_LAYER_KHRONOS_validation`.
 
 ```c++
 const std::vector < const char*> validationLayers = {
-	"VK_LAYER_HRONOS_validation"
+	"VK_LAYER_KHRONOS_validation"
 };
 
 #ifdef NDEBUG
@@ -206,14 +206,7 @@ Devolverá una lista de extensiones basada en cualquier *validation_layer*, esté 
 
 Llama a `getRequiredExtension()` desde `createInstance()`:
 ```c++
-if (enableValidationLayers) {
-			auto extensions = getRequiredExtensions(); //llamada de la función
-			createInfo.enabledLayerCount = static_cast <uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
-		}
-		else {
-			createInfo.enabledLayerCount = 0;
-		}
+auto extensions = getRequiredExtensions(); //llamada de la función
 ```
 
 Añade una nueva función llamada `debugCallback` con el prototipo `PFN_vkDebugUtilsMessengerCallbackEXT`. La `VKAPI_ATTR` y `VKAPI_CALL` aseguran que la función tiene una firma correcta de Vulkan para poder llamarla.
@@ -569,3 +562,4 @@ int rateDeviceSuitability(VkPhysicalDevice device) {
 
 	return score;
 	}
+```
