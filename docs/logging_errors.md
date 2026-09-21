@@ -115,6 +115,64 @@ validation layer: vkCreateInstance(): pCreateInfo->ppEnabledExtensionNames does 
 pNext chain: VkInstanceCreateInfo::pNext -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VkDebugUtilsMessengerCreateInfoEXT].
 The Vulkan spec states: If the pNext chain of VkInstanceCreateInfo includes a VkDebugUtilsMessengerCreateInfoEXT structure, the list of enabled extensions in ppEnabledExtensionNames must contain VK_EXT_debug_utils (https://vulkan.lunarg.com/doc/view/1.4.328.1/windows/antora/spec/latest/chapters/initialization.html#VUID-VkInstanceCreateInfo-pNext-04926)
 ```
+## Solution
+The `createInstance` had some errors:
 
+- Calling twice the `instance`, and that's provoque memory leaks.
+- `extensions` is inside the **if** statement, so it is never called.
+- The vector which holds the names of the extensions has the same name that `extensions`, so it renamed as availableExtensions.
+
+The code was changed:
+```c++
+void createInstance() {
+		if (enableValidationLayers && !checkValidationLayerSupport()) {
+			throw std::runtime_error("validation layers requested, but not available!");
+		}
+		VkApplicationInfo appInfo{};
+		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+		appInfo.pApplicationName = "Hello Triangle";
+		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+		appInfo.pEngineName = "No Engine";
+		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+		appInfo.apiVersion = VK_API_VERSION_1_0;
+
+		VkInstanceCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		createInfo.pApplicationInfo = &appInfo;
+
+		\\The extensions is outside of the if statement
+		auto extensions = getRequiredExtensions();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+		createInfo.ppEnabledExtensionNames = extensions.data();
+
+		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+
+		if (enableValidationLayers) {
+			createInfo.enabledLayerCount = static_cast <uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+
+			populateDebugMessengerCreateInfo(debugCreateInfo);
+			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+		}
+		else {
+			createInfo.enabledLayerCount = 0;
+			createInfo.pNext = nullptr;
+		}
+
+		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create instance!");
+		}
+
+		uint32_t extensionCount = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+		std::vector <VkExtensionProperties> availableExtensions(extensionCount);
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data()); //the name of the vector is changed
+
+		std::cout << "available extension:\n ";
+		for (const auto& extension : availableExtensions) {
+			std::cout << '\t' << extension.extensionName << '\n';
+		}
+	}
+```
 
 
