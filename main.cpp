@@ -124,35 +124,23 @@ private:
 		createInfo.pApplicationInfo = &appInfo;
 
 		
-
-		uint32_t glfwExtensionCount = 0;
-		const char** glfwExtensions;
-
-		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-		createInfo.enabledExtensionCount = glfwExtensionCount;
-
-		createInfo.ppEnabledExtensionNames = glfwExtensions;
+		auto extensions = getRequiredExtensions();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+		createInfo.ppEnabledExtensionNames = extensions.data();
 
 		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 
 		if (enableValidationLayers) {
-			auto extensions = getRequiredExtensions();
 			createInfo.enabledLayerCount = static_cast <uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
 
 			populateDebugMessengerCreateInfo(debugCreateInfo);
-
 			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
-
-
 		}
 		else {
 			createInfo.enabledLayerCount = 0;
 			createInfo.pNext = nullptr;
 		}
-
-		VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
 
 		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create instance!");
@@ -160,14 +148,11 @@ private:
 
 		uint32_t extensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-		std::vector <VkExtensionProperties> extensions(extensionCount);
-
-		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+		std::vector <VkExtensionProperties> availableExtensions(extensionCount);
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
 
 		std::cout << "available extension:\n ";
-
-		for (const auto& extension : extensions) {
+		for (const auto& extension : availableExtensions) {
 			std::cout << '\t' << extension.extensionName << '\n';
 		}
 	}
