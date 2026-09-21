@@ -497,4 +497,29 @@ for (const auto& device : devices) {
 	}
 }
 ```
+## Código base para los checks para dispositivos adecuados
 
+Para evaluar que tal adecuado es un dispositivo, podemos empezar preguntando por el **nombre**, el **tipo** y las **versiones que soporta 
+usando `vkGetPhysicalDeviceProperties`:
+```c++
+VkPhysicalDeviceProperties deviceProperties;
+vkGetPhysicalDeviceProperties(device, &deviceProperties);
+```
+Para funcionalidades opcionales como las compresión de texturas, los *floats* 64 bits y los *rendering* multipantalla (útil para las VR), podemos pedirlas 
+usando `vkGetPhysicalDevicesFeatures`:
+```c++
+VkPhysicalDeviceFeatures deviceFeatures;
+vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+```
+Un ejemplo para una aplicación que solo soporta gráficas dedicadas:
+```c++
+bool isDeviceSuitable(VkPhysicalDevice device) {
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
+}
+```
