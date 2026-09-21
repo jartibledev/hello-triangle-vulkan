@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <map>
 
 const uint32_t WIDTH = 1240;
 const uint32_t HEIGHT = 720;
@@ -98,6 +99,19 @@ private:
 			throw std::runtime_error("failed to find a suitable GPU!");
 		}
 
+		std::multimap<int, VkPhysicalDevice> candidates;
+
+		for (const auto& device : devices) {
+			int score = rateDeviceSuitability(device);
+			candidates.insert(std::make_pair(score, device));
+		}
+
+		if (candidates.rbegin()->first > 0) {
+			physicalDevice = candidates.rbegin()->second;
+		}
+		else {
+			throw std::runtime_error("failed to find a suitable GPU!");
+		}
 	}
 
 	bool isDeviceSuitable(VkPhysicalDevice device) {
@@ -108,6 +122,27 @@ private:
 		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
 		return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
+	}
+
+	int rateDeviceSuitability(VkPhysicalDevice device) {
+		VkPhysicalDeviceProperties deviceProperties;
+		vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+		VkPhysicalDeviceFeatures deviceFeatures;
+		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+		int score = 0;
+		if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+			score += 100;
+		}
+
+		score += deviceProperties.limits.maxImageDimension2D;
+
+		if (!deviceFeatures.geometryShader) {
+			return 0;
+		}
+
+		return score;
 	}
 
 	void setupDebugMessenger() {
