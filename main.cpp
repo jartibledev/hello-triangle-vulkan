@@ -103,15 +103,6 @@ private:
 		}
 	}
 
-	bool isDeviceSuitable(VkPhysicalDevice device) {
-		VkPhysicalDeviceProperties deviceProperties;
-		vkGetPhysicalDeviceProperties(device, &deviceProperties);
-
-		VkPhysicalDeviceFeatures deviceFeatures;
-		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-		return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
-	}
 
 	int rateDeviceSuitability(VkPhysicalDevice device) {
 		VkPhysicalDeviceProperties deviceProperties;
@@ -120,6 +111,7 @@ private:
 		VkPhysicalDeviceFeatures deviceFeatures;
 		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
+		
 		int score = 0;
 		if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
 			score += 100;
@@ -130,7 +122,7 @@ private:
 		if (!deviceFeatures.geometryShader) {
 			return 0;
 		}
-
+		
 		return score;
 	}
 
