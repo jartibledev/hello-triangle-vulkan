@@ -41,7 +41,7 @@ void DestroyDebugUtilsMessengerEXT(
 	VkInstance instance,
 	VkDebugUtilsMessengerEXT debugMessenger,
 	const VkAllocationCallbacks* pAllocator) {
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "VkDestroyDebugUtilsMessengerEXT");
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 
 	if (func != nullptr) {
 		func(instance, debugMessenger, pAllocator);
@@ -77,10 +77,7 @@ private:
 	void setupDebugMessenger() {
 		if (!enableValidationLayers) return;
 
-		
-
 		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-
 		populateDebugMessengerCreateInfo(createInfo);
 		
 		if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
@@ -95,14 +92,6 @@ private:
 			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		createInfo.pfnUserCallback = debugCallback;
 		createInfo.pUserData = nullptr;
-
-		
-
-		if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-			throw std::runtime_error("failed to set up debug messenger!");
-		}
-
-
 	}
 
 	
@@ -235,10 +224,8 @@ private:
 		glfwDestroyWindow(window);
 		glfwTerminate();
 	}
-
-	
-
 };
+
 int main() {
 	HelloTriangleApplication app;
 
