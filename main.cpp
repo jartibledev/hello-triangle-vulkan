@@ -9,7 +9,7 @@
 #include <cstring>
 #include <vector>
 #include <map>
-#include <optional>s
+#include <optional>
 
 const uint32_t WIDTH = 1240;
 const uint32_t HEIGHT = 720;
