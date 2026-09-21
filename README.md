@@ -523,3 +523,49 @@ bool isDeviceSuitable(VkPhysicalDevice device) {
 	return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
 }
 ```
+Puedes darle a cada dispositivo una puntuación y escoger la gráfica con más puntos. De esta manera podrías seleccionar la tarjeta gráfica 
+más adecuada mediante dándole un puntaje mayor, pero seleccionar la integrada en la GPU si no hay ninguna más disponible:
+```c++
+#include <map>
+...
+void pickPhysicalDevice(){
+...
+	std::multimap<int, VkPhysicalDevice> candidates;
+
+	for (const auto& device : devices) {
+		int score = rateDeviceSuitability(device);
+		candidates.insert(std::make_pair(score, device));
+	}
+
+	if (candidates.rbegin()->first > 0) {
+		physicalDevice = candidates.rbegin()->second;
+	}
+	else {
+		throw std::runtime_error("failed to find a suitable GPU!");
+	}
+}
+int rateDeviceSuitability(VkPhysicalDevice device) {
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	
+	int score = 0;
+
+	//Discrete GPU significa un rendimiento avanzado
+	if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+		score += 100;
+	}
+
+	//Tamaño máximo posible de las texturas que afectan a la calidad de los gráficos
+	score += deviceProperties.limits.maxImageDimension2D;
+
+	//La aplicación no puede funcionar sin geometry shaders
+	if (!deviceFeatures.geometryShader) {
+		return 0;
+	}
+
+	return score;
+	}
