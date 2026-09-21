@@ -426,3 +426,4 @@ Las *validation layers* son capas que ayudan a captar errores que puedan surgir 
 Usamos los *callback messages* para personalizar nuestros avisos. Para ello cogemos una lista de extensiones de las *validation layers*
 para poder usarlas, luego creamos la función del *callback* en sí para configurar el tipo de mensaje y su grado de importancia.
 Llamamos a la *callback*.Y como todo proceso en `c++`, limpiamos la instancia del *debugging*.
+

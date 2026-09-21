@@ -102,5 +102,19 @@ const std::vector < const char*> validationLayers = {
 	"VK_LAYER_KHRONOS_validation"
 };
 ```
+# Some validations layers are enabled
+The console shows the following error:
+```text
+validation layer: vkCreateInstance(): pCreateInfo->ppEnabledExtensionNames does not include VK_EXT_debug_utils, but the pNext chain includes VkDebugUtilsMessengerCreateInfoEXT.
+pNext chain: VkInstanceCreateInfo::pNext -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VkDebugUtilsMessengerCreateInfoEXT].
+The Vulkan spec states: If the pNext chain of VkInstanceCreateInfo includes a VkDebugUtilsMessengerCreateInfoEXT structure, the list of enabled extensions in ppEnabledExtensionNames must contain VK_EXT_debug_utils (https://vulkan.lunarg.com/doc/view/1.4.328.1/windows/antora/spec/latest/chapters/initialization.html#VUID-VkInstanceCreateInfo-pNext-04926)
+...
+validation layer: loader_get_json: Failed to open JSON file C:\Program Files (x86)\Epic Games\Epic Online Services\managedArtifacts\98bc04bc842e4906993fd6d6644ffb8d\EOSOverlayVkLayer-Win64.json
+...
+validation layer: vkCreateInstance(): pCreateInfo->ppEnabledExtensionNames does not include VK_EXT_debug_utils, but the pNext chain includes VkDebugUtilsMessengerCreateInfoEXT.
+pNext chain: VkInstanceCreateInfo::pNext -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO] -> [VkDebugUtilsMessengerCreateInfoEXT].
+The Vulkan spec states: If the pNext chain of VkInstanceCreateInfo includes a VkDebugUtilsMessengerCreateInfoEXT structure, the list of enabled extensions in ppEnabledExtensionNames must contain VK_EXT_debug_utils (https://vulkan.lunarg.com/doc/view/1.4.328.1/windows/antora/spec/latest/chapters/initialization.html#VUID-VkInstanceCreateInfo-pNext-04926)
+```
+
 
 
