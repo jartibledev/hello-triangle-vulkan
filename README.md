@@ -563,3 +563,101 @@ int rateDeviceSuitability(VkPhysicalDevice device) {
 	return score;
 	}
 ```
+## Queue Families
+Cualquier tipo de operación que corra Vulkan, desde dibujar hasta cargar texturas, requiere de comandos que son añadidos a una cola.
+Hay diferentes tipos de colas que son creadas de diferencte familias de colas y cada familia permite solo un subconjunto de comandos.
+Necesitamos checkear cuales de estas familias de colas tienen soporte del dispositivo y cuales de estas tiene soporte de comando que queremos usar:
+```c++
+uint32_t findQueueFamilies(vkPhysicalDevice device){
+//lógica para encontrar familia de colas gráficas
+}
+```
+Añade los índices dentro del *struct* ya que estamos listos para buscar otra cola. Añadimos el *struct* dentro de private:
+```c++
+struct QueueFamilies {
+uint32_t graphicsFamily;
+};
+//Sustituimos el tipo uint32_t por QueueFamililyIndices en la definición de la función findQueueFamilies
+QueueFamilyIndices findQueueFamilies(vkPhysicalDevice device){
+QueueFamilyIndices indices;
+//lógica para encontrar las colas de familia indices para rellenar el struct
+return indices;
+}
+```
+Pero, ¿qué ocurre si la familia de colas no está disponible? Entonces usamos una estructura de datos llamada `<optional>`:
+```c++
+//Ejemplo de como funciona <opctional> en Vulkan. No añadas los prints.
+#include <optional>
+...
+std::optional <uint32_t> graphicsFamily;
+std::cout<<std::boolaplha<<graphicsFamily.has_value()<<std::endl; // esto devuelve falso ya que nos dice si tiene algún valor graphicsFamily
+
+graphicsFamily= 0;
+std::cout << std::boolaplha << graphicsFamily.has_value()<< std::endl; // nos devuelve verdadero ya que graphicsFamily tiene un valor alamacenado
+```
+La estructura de datos [optional](https://es.cppreference.com/cpp/utility/optional) gestiona un valor *opcional*, que puede o no estar presente.  
+Recogemos una lista de cola de familias:
+```c++
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+	QueueFamilyIndices indices;
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+	...
+}
+```
+El *struct* `VkQueueFamilyProperties` contiene detalles acerca de la familia de colas, incluido el tipo de operaciones
+que soportan y el número de colas que pueden ser creadas basadas en la familia.
+
+Necesitamos encontrar al menos una cola de familia que soporte `VK_QUEUE_GRAPHICS_BIT`:
+```c++
+int i = 0;
+for (const auto& queueFamily : queueFamilies) {
+	if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+		indices.graphicsFamily = i;
+	}
+	if (indices.isComplete()) {
+		break;
+	}
+	i++;
+}
+```
+Itera sobre las familias de colas. Si la actual familia de cola corresponde con `VK_GRAPHICS_BIT`, marcamos el indice de la familia de gráficos con el número y continuamos.
+Ahora tenemos esta función, podemos usarla para checkear en el`isDeviceSuitable` para asegurar que el dispositivo puede procesar lso comandos que queremos usar:
+```c++
+bool isDeviceSuitable (vkPhysicalDevice device){
+	QueueFamilyIndices indices = findQueueFamilies(device);
+	
+	return indices.graphicsFamily.has_value();
+}
+```
+Añadimos un checkeo genérico para el *struct* mismo. Creamos la función `isComplete()` dentro del *struct* que encapsula las llamadas desde `isDeviceSuitable`:
+```c++
+struct QueueFamilyIndices {
+	std:: optional<uint32_t> graphicsFamily;
+
+	bool isComplete(){
+		QueueFamilyIndices indices = findQueueFamilies(device);
+		return indices.graphicsFamily.has_value();
+	}
+}
+...
+bool isDeviceSuitable(VkPhysicalDevice device){
+	QueueFamilyIndices indices = findQueueFamilies(device);
+	return indices.isComplete();
+}
+```
+Ahora podemos usarla también para una salida temprana del bucle en `findQueueFamilies`:
+```c++
+for (const auto& queueFamily : queueFamilies){
+	...
+	if(indices.isComplete()){
+		break;
+	}
+	i++;
+}
+```
+## Resumen
+Seleccionamos las gráficas que tienen soporte en Vulkan y configuramos las colas que contendrán los comandos que indican las operaciones que haremos en Vulkan.
+
