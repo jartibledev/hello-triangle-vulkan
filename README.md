@@ -661,3 +661,126 @@ for (const auto& queueFamily : queueFamilies){
 ## Resumen
 Seleccionamos las gráficas que tienen soporte en Vulkan y configuramos las colas que contendrán los comandos que indican las operaciones que haremos en Vulkan.
 
+# Dispositivos lógicos y colas
+Después de seleccionar un dispositvo físico para usar, necesitamos configurar un dispositivo lógico para la interfaz.
+El dispositivo lógico describe las funcionalidades que queremos usar. También necesitamos especificar que colas
+crear ahora de las que tengamos disponibles en las colas de familia. Puedes crear múltiples dispositivos lógicos de la misma manera que lo haces
+en un dispositivo físico si tienes muchos requisitos.
+
+Empezamos creando un nuevo miembro de clase para almacenar el dispositivo lógico :
+
+```c++
+VkDevice device;
+```
+Ahora define la función `createLogicalDevice` y llámala desde `initVulkan`.
+```c++
+void initVulkan() {
+	createInstance();
+	setupDebugMessenger();
+	pickPhysicalDevice();
+	createLogicalDevice();
+}
+
+void createLogicalDevice(){
+
+}
+```
+## Especificando las colas que van a ser creadas
+`VkDeviceQueueCreateInfo` es un *struct* que describe el número de colas que queremos para una sola familia de colas.
+Como ahora solo estamos interesados en el aspecto gráfico, solo crearemos una cola que hable sobre las gráficas.
+
+```c++
+QueueFamilyIndices indices = findQueueFamilies (physicalDevice);
+
+VkDeviceQueueCreateInfo queueCreateInfo{};
+queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value(),
+queueCreateInfo.queueCount = 1;
+```
+El *driver* actual que esta disponible solo te permitirá crear un pequeño número de colas por cada familia de colas,
+aunque no necesitas más que una. Esto es debido a que puedes crear todos los búfers sobre múltiples tramas
+y añadirlas todas de una vez a la trama principal con una sola llamada *low_overhead*.
+
+Vulkan te deja asignar prioridades a la cola para influir en el esquema de comandos búfers usando 
+números de puntos flotantes en un rango de entre 0.0 y 1.0. Esto es necesario aunque solo haya una sola cola:
+```c++
+float queuePriority = 1.0f;
+queueCreateInfo.pQueuePriorities = &queuePriority;
+```
+## Especificando el uso de las funcionalidades de los dispositivos
+Configura las funcionalidades de los dispositivos que se usarán. Por ahora lo dejaremos en **FALSE**:
+```c++
+VkPhysicalDeviceFeatures deviceFeatures{};
+```
+## Creando el dispositivo lógico
+```c++
+vkDeviceCreateInfo createInfo{};
+createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+```
+Añade punteros a la cola de `createInfo` y los *stucts* del dispositivo:
+```c++
+createInfo.pQueueCreateInfos = &queueCreateInfo;
+createInfo.queueCreateInfoCount = 1;
+createInfo.pEnabledFeatures = &deviceFeatures;
+```
+Lo que queda de información se parece al *struct* `VkInstanceCreateInfo` y requiere que especifiques las extensiones y las *validation layers*.
+La diferencia es que ahora hay un dispositivo en específico.
+
+La anteriores implememntaciones de Vulkan hacían hincapié en la diferencia entre la instance y las *validation layers*. Pero este no es el caso.
+
+Esta diferencia significa que los campos `enabledLayerCount` y `ppEnabledLayerNames` de `VkDeviceCreateInfo` son ignorados pro implementaciones más recientes.
+Sin embargo, es bueno configurarlo para que sea compatible con versiones anteriores:
+```c++
+createInfo.enabledExtensionCount = 0;
+
+if (enableValidationLayers) {
+	createInfo.enabledLayerCount = static_cast<uint32_t> (validationLayers.size());
+	createInfo.ppEnabledLayerNames = validationLayers.data();
+}
+else {
+	createInfo.enabledLayerCount = 0;
+}
+```
+Instancia el dispositivo lógico:
+```c++
+if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+	throw std::runtime_error("failed to create logical device!");
+}
+```
+Similarmente a la creación de la instancia de la función, esta llamada puede devolver errores basados en
+dispones de no existentes extensiones o de especificar la intención de usar funcionalidades que no tienensoporte.
+El primer argumento es el dispositivo lógico del que queremos crear una interfaz. El segundo argumento es la cola con la información de cómo queremos usarla. 
+El tercer argumento de la función indica el puntero del *callback* y es opcional. El último argumento es un puntero a una variable para almacenar 
+el dispositivo lógico.
+
+El dispositivo debería ser destruido en `cleanup` con la función `vkDestroyDevice`:
+```c++
+void cleanup() {
+		vkDestroyDevice(device, nullptr);
+...
+}
+```
+El dispositivo lógico no interactúa directamente con instancias, ya que no está incluido como un parámetro.
+## Recogiendo los manejadores de cola
+Las colas son automáticamente creadas con el dispositivo lógico, pero no tenemos un manejador para crear una interfaz con ellas.
+
+Para crear este manejador, primero añadimos un miembro de clase para almacenar el manejador en la cola de gráficos:
+```c++
+VkQueue graphcisQueue;
+```
+Las colas de dispositivos son limpiadas de manera implícita cuando la cola es destruida, así que no necesitamos nada más de `cleanup`.
+
+Podemos usar `vkGetDeviceQueue` para recoger los manejadores de colas por cada familia de cola.
+```c++
+vkGetDeviceQueue( device,// dispositivo lógico
+indices.graphicsFamily.value(),//familia de colas
+0,// índice de cola
+&graphicsQueue); // puntero a la variable que almacena los manejadores de cola
+```
+## Resumen
+El dispositivo lógico describe las funcionalidades que queremos usar. Para crearlos debemos:
+1. Añadir un miembro de clase que albergue  el dispositivo lógico, `VkDevice device`y definir la función `createLogicalDevice` y llamarla desde `initVulkan`.
+2. Especificar la colas que van a ser creadas rellenando el *struct* `VkDeviceQueueCreateInfo`.
+3. Especificar las funcionalidades del dispositivo.
+4. Crear el dispositivo lógico.
+5. Recoger los manejadores de cola.
