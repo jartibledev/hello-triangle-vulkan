@@ -784,3 +784,18 @@ El dispositivo lógico describe las funcionalidades que queremos usar. Para crear
 3. Especificar las funcionalidades del dispositivo.
 4. Crear el dispositivo lógico.
 5. Recoger los manejadores de cola.
+
+# Presentación
+# Window surface
+Ya que Vulkan es una API agnóstica, no puede acceder directamente al *window surface* por su propia cuenta. Para establecer
+una conección entre Vulkan y el sistema de ventanas que presenten los resultados en la pantalla, necesitamos usar una extensión para
+**WSI**(*Window System Integration*). En esta parte veremos primero `VR_KHR_surface`. Expone un objeto `VkSurface` que representa un tipo abstracto
+de superficie para representar imágenes. La superficie en nuestro programa será soportada por la librería GLFW que hará de mediador entre Vulkan y el sistema de pantallas.
+
+La extensión `VK_KHR_surface` es una instancia de nivel de extensión y podremos activarla, ya que está incluida en la lista devuelta por
+`glfwGetRequiredInstanceExtensions`. La lista también incluye alguna extensión para WSI que usaremos en un par de capítulos.
+
+La superficie de la ventana necesitará ser creada después de la creación de la instancia, porque puede actualmente influir en la selección de los dispositivos físicos.
+La razón por la que posponemos esto es que la superficie de la ventana es parte de un gran número de *render targets* y presentaciones por las cuales 
+la explicación esta relacionada con el *set up* básico. Las superficies de pantallas son elementos opcionales en Vulkan que puedes desactivar si lo que pretendes es hacer
+uso de tareas en segundo plano. Vulkan te permite crear sin necesidad de *hacks* una ventana invisible (cosa que en OpenGl no se puede hacer).
