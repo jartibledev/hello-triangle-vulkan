@@ -799,3 +799,40 @@ La superficie de la ventana necesitará ser creada después de la creación de la i
 La razón por la que posponemos esto es que la superficie de la ventana es parte de un gran número de *render targets* y presentaciones por las cuales 
 la explicación esta relacionada con el *set up* básico. Las superficies de pantallas son elementos opcionales en Vulkan que puedes desactivar si lo que pretendes es hacer
 uso de tareas en segundo plano. Vulkan te permite crear sin necesidad de *hacks* una ventana invisible (cosa que en OpenGl no se puede hacer).
+
+## Creación de la *window surface*
+A través del objeto `VkSurfaceKHR` y su uso en una plataforma agnostica, su creación no puede darse ya que depende de los detalles del sistema de ventanas.
+Por ejemplo, necesita los manejadores`HWND` y `HMODULE` en Windows. Por lo tanto hey una parte de la plataforma específica agnostica para la extensión, la cual en Windows se llama `VK_win32_surface` y también esta incluida automáticamente 
+en la lista de `glfwGetRequiredInstanceExtension`.
+
+GLFW actualmente tiene `glfwCreateWindowSurface` que maneja las diferencias de superficie en cada sistema operativo, pero de todas maneras veremos que se cuece entre banbalinas.
+
+Para acceder a las funciones de la plataforma nativa, necesitará actualizar los *includes* en la parte de arriba del código:
+```c++
+#define VK_USE_PLATORM_WIN32_KHR
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+``` 
+Porque la superficie de la ventana es un objeto de Vulkan, viene con una estructura `VkWin32SurfaceCreateInfoKHR` que necesita ser rellenada. Tiene dos importantes parámetros:
+- `hwnd` que maneja la ventana.
+- `hisntance` que maneja el proceso.
+
+```c++
+VkWin32SurfaceCreateInfoKHR createInfo{};
+createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SRUFACE_CREATE_INFO_KHR;
+createInfo.hwnd = glfwGetWin32Window(window);
+createInfo.hinstance = GetModuleHandle(nullptr);
+```
+La función `glfwGetWin32Window`es usada para conseguir el raw de HWND del objeto de la ventana GLFW. La llamada `GetModuleHandle` devuelve el manejador de `HINSTANCE`del proceso actual.
+
+Después de la superficie que ha sido creada con `vKCreateWin32SurfaceKHR`, la cual incluye un parámetro para la instancia, los detalles de la creación de la superficie,
+*allocators* personalizados y una variable para el manejador de la superficie en el que puede ser almacenado.
+Técnicamente esto es una función extensión de WSI, pero es más comunmente usada que el cargador de Vulkan, así que no necesitarás cargar extensiones explícitamente.
+
+```c++
+if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS){
+	throw std::runtime_error("failed to create window surface!");
+}
+```
