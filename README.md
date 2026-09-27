@@ -836,3 +836,35 @@ if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCC
 	throw std::runtime_error("failed to create window surface!");
 }
 ```
+La función `glfwCreateWindowSurface` ejecuta exactamente esta operación con una implementación diferente para cada plataforma.
+Ahora la integraremos dentro de nuestro programa. Añade una función `createSurface` para ser llamada desde `initVulkan` justo después de crear una instancia y del `setpuDebugMessenger`.
+```c++
+void initVulkan(){
+	createInstance();
+	setupDebugMessenger();
+	createSurface();
+	pickPhysicalDevice();
+	createLogicalDevice();
+}
+
+void createSurface(){
+}
+```
+La llamada de GLFW coge simple parámetros en vez de una estructura que crea una implementación de la función:
+```c++
+void createSurface(){
+	if(glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS){
+		throw std::runtime_error("failed to create window surface!");
+	}
+}
+```
+Los parámetros son `VkInstance`, el puntero a la ventana de GLFW, alojadores y un puntero a la variable `VkSurfaceKHR`.
+Simplemente pasa a través de `VkResult` de una llamada relevante a la plataforma. GLFW no ofrece una función especial para destruir la superficie, pero se puede acceder fácilmente a través de la API:
+```c++
+void cleanup(){
+	...
+	vkDestroySurfaceKHR(instance, surface,nullptr);
+	vkDestroyInstance(instance, nullptr);
+	...
+}
+```
