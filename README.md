@@ -901,3 +901,41 @@ if (presentSupport){
 Notese que son muy parecidos el final de la misma familia de cola después de todo, pero aunque el programa lo trate como igual, si están en colas separadas por una aproximación uniforme.
 Sin embargo, puedes añadir lógica para elegir un dispositivo físico que soporte el dibujado y la presentación en la misma cola para mejorar el rendimiento.
 
+## Creando la cola de presentación
+Una de las cosas que queda por modificar es la creación del dispositivo lógico para crear la cola de presentación y recoger el *handle* de `VkQueue`. 
+Añade un miembro para el *handle*:
+```c++
+VkQueue presentQueue;
+```
+Lo siguiente que necesitamos en tener múltiples estructuras `VkDeviceQueueCreateInfo` para crear una cola de ambas familias.
+Una manera elegante de hacerlo es crear un único *set* de todas las colas de familias que son necesarias para las colas requeridas:
+```c++
+#include <set>
+...
+//Dentro de logicalDevice
+QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+std::set<uint32_t>uniqueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+float queuePriority = 1.0f;
+for (uint32_t queueFamily : uniqueQueueFamilies){
+	VkDeviceQueueCreateinfo queueCreateInfo{};
+	queueCreateInfo.sType= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = queueFamily;
+	queueCreateInfo.queueCount = 1;
+	queueCreateInfo.pQueuePriorities = &queuePriority;
+	queueCreateInfos.push_back(queueCreateInfo);
+}
+```
+Y modifica `VkDeviceCreateInfo` para apuntar al vector:
+```c++
+createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+createInfo.pQueueCreateInfos = queueCreateInfos.data();
+```
+Si las colas de familia son las mismas, entonces solo necesitamos pasarle su index una vez. Finalmente, añade una llamada para recoger el manejador de cola:
+```c++
+VkGetDeviceQueue(device, indices.presentFamily.value(), 0. &presentQueue);
+```
+En este caso las colas de familia son la misma. los dos manejadores tendrán el mismo valor.
+
