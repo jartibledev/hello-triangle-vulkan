@@ -947,6 +947,6 @@ Lo primero será crear la *window surface*:
 2. Definimos la función `createSurface`.
 3. La limpiamos en el `cleanup`.
 
-Revisamos si tenemos extensiones que soporten nuestra *window surface*. Y finalmente creamos las colas de presentación que albergarán las operaciones de las pantallas.
+Revisamos si tenemos extensiones que soporten nuestra *window surface*. Y finalmente creamos un set de las familias de colas gráficas y de las colas de presentación.
 
 
