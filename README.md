@@ -788,8 +788,8 @@ El dispositivo lógico describe las funcionalidades que queremos usar. Para crear
 # Presentación
 # Window surface
 Ya que Vulkan es una API agnóstica, no puede acceder directamente al *window surface* por su propia cuenta. Para establecer
-una conección entre Vulkan y el sistema de ventanas que presenten los resultados en la pantalla, necesitamos usar una extensión para
-**WSI**(*Window System Integration*). En esta parte veremos primero `VR_KHR_surface`. Expone un objeto `VkSurface` que representa un tipo abstracto
+una conexión entre Vulkan y el sistema de ventanas que presenten los resultados en la pantalla, necesitamos usar una extensión para
+**WSI** (*Window System Integration*). En esta parte veremos primero `VR_KHR_surface`. Expone un objeto `VkSurface` que representa un tipo abstracto
 de superficie para representar imágenes. La superficie en nuestro programa será soportada por la librería GLFW que hará de mediador entre Vulkan y el sistema de pantallas.
 
 La extensión `VK_KHR_surface` es una instancia de nivel de extensión y podremos activarla, ya que está incluida en la lista devuelta por
@@ -797,7 +797,7 @@ La extensión `VK_KHR_surface` es una instancia de nivel de extensión y podremos 
 
 La superficie de la ventana necesitará ser creada después de la creación de la instancia, porque puede actualmente influir en la selección de los dispositivos físicos.
 La razón por la que posponemos esto es que la superficie de la ventana es parte de un gran número de *render targets* y presentaciones por las cuales 
-la explicación esta relacionada con el *set up* básico. Las superficies de pantallas son elementos opcionales en Vulkan que puedes desactivar si lo que pretendes es hacer
+estan relacionada con el *set up* básico. Las superficies de pantallas son elementos opcionales en Vulkan que puedes desactivar si lo que pretendes es hacer
 uso de tareas en segundo plano. Vulkan te permite crear sin necesidad de *hacks* una ventana invisible (cosa que en OpenGl no se puede hacer).
 
 ## Creación de la *window surface*
@@ -938,4 +938,15 @@ Si las colas de familia son las mismas, entonces solo necesitamos pasarle su ind
 VkGetDeviceQueue(device, indices.presentFamily.value(), 0. &presentQueue);
 ```
 En este caso las colas de familia son la misma. los dos manejadores tendrán el mismo valor.
+
+## Resumen
+Para acceder a la *window surface* necesitamos la librería GLFW que actúa como mediador entre Vulkan y el WSI (*Window System Interface*).
+
+Lo primero será crear la *window surface*:
+1. Creamos una estructura para configurar los detalles de la Window Surface.
+2. Definimos la función `createSurface`.
+3. La limpiamos en el `cleanup`.
+
+Revisamos si tenemos extensiones que soporten nuestra *window surface*. Y finalmente creamos las colas de presentación que albergarán las operaciones de las pantallas.
+
 
