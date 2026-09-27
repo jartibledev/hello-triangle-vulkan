@@ -868,3 +868,36 @@ void cleanup(){
 	...
 }
 ```
+## Pidiendo soporte para presentación
+Aunque las implementaciones de Vulkan puedan soportar la integración del sistema de ventanas, no significa que cada dispositivo en el sistema lo soporte.
+Por lo tanto, necesitamos extender `isDeviceSuitable` para asegurarnos de que el dispositivo puede presentar imágenes para la superficie que hemos creado. 
+Ya que la presentación es una funcionalidad de una cola en específico, el problema es acutalmente acerca de encontrar una cola de familia que soporte presenta la superficie que hemos creado.
+
+Es actualmente posible que la cola de familias soporte comandos de dibujado y también de presentación que no se superpongan.
+Por lo tanto tenemos que tomar nota de que hay distintas colas de presentaciones modificando la estructura `QueueFamilyIndices`:
+```c++
+struct QueueFamilyIndices {
+	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
+
+	bool isComplete(){
+		return graphicsFamily.has_value() && presentFamily.has_value();
+	}
+}
+```
+Ahora modificamos la función `findQueueFamilies` para buscar una familia de cola que tenga la capacidad de presentar nuestra superficie de ventana.
+La función para checkear es la `vkGetPhysicalDeviceSurfaceSupportKHR`, la cual toma el dispositivo físico, el índice de la familia de cola y la superficie como parámetros.
+Añade uan llamada en el mismo loop que `VK_QUEUE_GRAPHICS_BIT`:
+```c++
+VkBool32 presentSupport = false;
+vkGetPhysicalDeviceSurfaceSupportKHR(device, 1, surface, &presentSupport);
+```
+Entonces simplificamos el check del booleano y guardamos el índice de la cola de familia de la presentación:
+```c++
+if (presentSupport){
+	indices.presentFamily = 1;
+}
+```
+Notese que son muy parecidos el final de la misma familia de cola después de todo, pero aunque el programa lo trate como igual, si están en colas separadas por una aproximación uniforme.
+Sin embargo, puedes añadir lógica para elegir un dispositivo físico que soporte el dibujado y la presentación en la misma cola para mejorar el rendimiento.
+
