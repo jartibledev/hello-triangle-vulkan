@@ -1006,3 +1006,17 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device){
 He elegido usar un conjunto de *strings* aquí para representar la extensiones requeridas sin confirmar. 
 De esta manera podemos fácilmente descartarlos mientras enumeramos la secuencia de extensiones disponibles.
 De acuerdo puedes también usar un bucle anidado en `checkValidationlayerSupport`. La diferencia de rendimiento es irrelevante.
+
+### Resumen
+
+Checkeamos si las gráficas pueden mostrar las imágenes de la manera que queremos o si Vulkan tiene soporte para las surfaces windows.
+
+## Activando las extensiones para dispositivos
+Usando una *swapchain* requiere activar la extensión `VK_KHR_swapchain` primero. Activándola, la extension solo requiere un pequeño cambio de la 
+de la creación de la estructura del dispositivo lógico.
+```c++
+createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+createInfo.ppEnabledExtensionNames = deviceExtension.data();
+```
+Asegúrate de reemplazar la línea existente `createInfo.enabledExtensionCount = 0;` cuando lo hagas.
+
