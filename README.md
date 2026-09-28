@@ -1020,3 +1020,71 @@ createInfo.ppEnabledExtensionNames = deviceExtension.data();
 ```
 Asegúrate de reemplazar la línea existente `createInfo.enabledExtensionCount = 0;` cuando lo hagas.
 
+## Pidiéndo detalles sobre el soporte de swap chain
+No es suficiente solo con checkear si está disponible la *swap chain* , ya que puede que actualmente no sea compatible con nuestra superficie de ventana.
+Crear una *swap chain* también involucra un montón de configuraciones que solo la instancia y la creación del dispositivo,
+asó que necesitamos pedir más detalles antes de poder proceder.
+
+Hay basicamente tres tipos de propiedades que necesitamos para checkear:
+
+- **Capacidades básicas de la superficie** (mínimo/máximo número de imágenes en la *swap chain*, mínimo/máximo de anchura y altura de las imágenes).
+- **Formatos de la superficie** (formato pixel, espacio de color).
+- **Modos de presentación disponibles**.
+
+De igual manera para `findQueueFamilies`, nesecitaremos usar una estructura para pasar detalles una vez que sean pedidos.
+Las tres mencionados propiedades vienen en la forma de la siguiente estructura y la lista de estructura:
+```c++
+struct SwapChainSupportDetails {
+	VkSurfaceCapabilitiesKHR capabilities;
+	std::vector<VkSurfaceFormat>formats;
+	std::vector<VkPresentModeKHR> presentModes;
+};
+```
+Creamos ahora una nueva función `querySwapChainSupport` que rellenará el *struct*:
+```c++
+SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevie device){
+	SwapChainSupportDetails details;
+
+	return details;
+}
+```
+Veremos como pedimos a las estructuras las información que tienen incluida. Vamos a comenzar con las capacidades básicas de la superficie. Estas propiedades son simples de pedir y de devolver dentro de una sola estructura `VkSurfaceCapabilitiesKHR`.
+```c++
+vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+```
+Esta función toma las superficies de ventana específicas de `VkPhysicalDevice` y `VkSurfaceKHR` actuales cuando determinamos las capacidades que son soportadas
+Todas la funciones soportadas tienen estos dos primeros parámetros ya que son componentes de la *swap chain*.
+
+El siguiente paso es acerca de pedir formatos de superficie. Ya que esto es una lista de *structs*, seguimos el mismo ritual:
+```c++
+uint32_t formatCount;
+vkGetPhysicalDeviceSurfaceFormatKHR(device, surface, &formatCount, nullptr);
+
+if (formatCount != 0){
+	details.formats.resize(formatCount);
+	vkGetPhysicalDeviceSurfaceFormatKHR(device, surface, &formatCount, details.formats.data());
+}
+```
+Asegúrate de que el vector esta redimensionado para albergar todos los formatos disponibles. 
+Y finalmente, pedir los modos de presentación trabajan exactamente de la misma manera que `vkGetPhysicalDeviceSurfacePresentModeKHR`:
+```c++
+uint32_t presentModeCount;
+vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+
+if(presentModeCount != 0){
+	 details,presentModes.resizes(presentModeCount);
+	 vkGetPhysicalDeviceSurfacePresentModesKHR (device, surface, &presentmodeCount, details.presentModes.data());
+}
+```
+Ahora que tenemos todos los detalles dentro del *struct*, vamos a extender `isDeviceSuitable` una vez más para utilizar esta función para verificar que el soportde para la *swap chain* es el adecuado.
+```c++
+bool swapChainAdequate = false;
+if (extensionSupported){
+	SwapChainSupportedDetails swapChainSupport = querySwapChainSupport(device);
+	swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+}
+```
+Es importante que solo pidamos soporte para la *swap chain* después de que la extensión esté disponible. La última línea de la función cambia esto:
+```c++
+return indices.isComplete() && extensionSupported && swapChainAdequate;
+```
