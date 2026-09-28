@@ -1088,3 +1088,6 @@ Es importante que solo pidamos soporte para la *swap chain* después de que la ex
 ```c++
 return indices.isComplete() && extensionSupported && swapChainAdequate;
 ```
+## Resumen
+Pedimos detalles acerca del soporte para la swap chain. Básicamente pedimos las capacidades básicas de la surface, el formato de la surface y los modos de presentación disponibles.
+
