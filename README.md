@@ -949,4 +949,60 @@ Lo primero será crear la *window surface*:
 
 Revisamos si tenemos extensiones que soporten nuestra *window surface*. Y finalmente creamos un set de las familias de colas gráficas y de las colas de presentación.
 
+# Swap chain
+Una swapchain no es más que una cola de imágenes que están esperando para ser desplegadas en la pantalla. 
+Una vez que la imágen está dibujada, vuelve a la cola. En general, una swap chain sincroniza las imágenes que se muestran en la pantalla con la tasa de refresco de la imagen.
 
+## Checkeo para el soporte de swap chain
+
+No todas las gráficas son capaces de presentar imagenes directamente en una pantalla por varios motivos, por ejemplo borque están diseñadas
+para servidores y no tienen ninguna forma de mostrar los *outputs*. Por otro lado, ya que las imágenes que se muestran están fuertemente vinculadas al sistema de ventanas 
+y la superficie asociada con la ventana no son cubiertas por Vulkan. Tienes que activar la extensión para el dispositivo `VK_KHR_swapchain` después de pedir soporte.
+
+Por este motivo podemos extender la función `isDeviceSuitable` para checkear si esta extensión está soportada. Tenemos previamente que ver cómo listar las extensiones que son 
+soportadas por el `VkPhysicalDevice`, lo que debería ser fácil. Nótese que el *header* dela archivo de Vulkan provee un agradable macro `VK_KHR_SWAPCHAIN_EXTENSION_NAME` que está definido como `VK_KHR_swapchain`. La ventaja de usarlo es que el compilador puede captar los errores de sintaxis.
+
+Primero declaramos una lista de extensiones requeridas, similares a la lista de *validation layers* que están activas.
+
+```c++
+const std::vector<const char*> deviceExtensions = {
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+```
+Ahora crea una nueva función `checkDeviceExtensionSupport` que es llamada desde `isDeviceSuitable` como un check adicional:
+```c++
+bool isDeviceSuitable(VkPhysicalDevice device){
+	QueueFamilyIndices indices = findQueueFamilies(device);
+
+	bool extensionsSupported = checkDeviceExtensionSupported(device);
+
+	return indices.isComplete() && extensionSupported;
+}
+
+bool checkDeviceExtensionSupport(VkPhysicalDevice device){
+	return true;
+}
+```
+Modifica el cuerpo de la función para enumerar las extensiones y checkear si todas las extensiones requeridas están entre ellas.
+
+```c++
+bool checkDeviceExtensionSupport(VkPhysicalDevice device){
+	uint32_t extensionCount;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+	std::vector<VkExtensionProperties>availableExtensions(extensionCount);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, 
+	availableExtenison.data());
+
+	std::set<std::string> requiredExtensions (deviceExtensions.begin(), deviceExtensions.end());
+
+	for (const auto& extension : availableExtension) {
+		requiredExtension.erase(extension.extensionName);
+	}
+
+	return requiredExtension.empty();
+}
+```
+He elegido usar un conjunto de *strings* aquí para representar la extensiones requeridas sin confirmar. 
+De esta manera podemos fácilmente descartarlos mientras enumeramos la secuencia de extensiones disponibles.
+De acuerdo puedes también usar un bucle anidado en `checkValidationlayerSupport`. La diferencia de rendimiento es irrelevante.
