@@ -1088,6 +1088,131 @@ Es importante que solo pidamos soporte para la *swap chain* después de que la ex
 ```c++
 return indices.isComplete() && extensionSupported && swapChainAdequate;
 ```
-## Resumen
+### Resumen
 Pedimos detalles acerca del soporte para la swap chain. Básicamente pedimos las capacidades básicas de la surface, el formato de la surface y los modos de presentación disponibles.
 
+## Configuraciones de la swap chain
+Si las condiciones de la `swapChainAdequate` que encontramos, entonces el soporte es suficiente, pero puede haber aún diferentes modos de configurarlo optimamente.
+Escribiremos un par de funciones para encontrar las configuraciones adecuadas para la *swap chain*. Hay tres tipos:
+
+- **Formato de superficie**( profundidad de color).
+- **Modo de presentación**(condiciones para las imágenes *swaping* de la pantalla)
+- **Swap extendido** (resolución de imágenes en la *swap chain*).
+
+Por cada una de estas configuraciones, tenemos un valor ideal en mente que veremos si está disponible y por otro lado, crearemos alguna lógica para encontrar los siguiente.
+
+### Formato de superficie o *surface format*
+La función de esta configuración empieza así. Después pasaremos el miembro `formats` de la estructura `SwapChainSupportDetails` como argumento.
+```c++
+VkSuerfaceFormatKHR chooseSwapSurfaceFormat (const std::vector<VkSurfaceFormatKHR>&availableFormats){
+
+}
+```
+Cada *entry* `VkSurfaceFormatKHR` contiene un `format` y un miembro `colorSpace`. El miembro `format` especifica el canal del color y el tipo. Por ejemplo, `VK_FORMAT_B8G8R8A8_SRGB` significa que almacenamos el B, G. R y canales alfa en el orden
+de 8 bits *unsigned integer* para un total de 32 bits por pixel. El miembro `colorSpace` indica que si el espacio de color SERGB tiene soporte o no usando
+la señal`VK_COLOR_SPACE_SRGB_NONLINEAR_KHR`. Nótese que esta señal usada puede ser denominada `VK_COLORSPACE_SRGB_NONLINEAR_KHR`en antiguas versiones de la especificación.
+
+Para usar el espacio de color SRGB si está disponible, ya que resulta en más de un preciso color percibido. Es también más cercano al estándar de espacio de color para imágenes. como las texturas que usaremos.
+Por este motivo debemos también usar un SRGB de formato de color, el cual uno de los más comunes es `VK_FORMAT_B8G8R8A8_SRGB`.
+
+Vamos a ir a la lista y veremos si la combinación buscada está disponible:
+```c++
+for (const auto& availableFormat : availableFormat){
+	if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR){
+		return availableFormat;
+	}
+}
+```
+Si también falla entonces podríamos empezar clasificando los formatos disponibles basados en como de buenos son, pero en la mayoría de los casos
+está bien solo quedarnos con el primer formato especificado.
+```c++
+VkSurfaceFormatKHR chooseSwapSurfaceFormat (const std::vector<VkSurfaceFormatKHR>&availableFormats){
+	for (const auto& availableFormat : availableFormats){
+		if (availableFormat.format == VK_FORMAT_B8R8G8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR){
+			return availableFormat;
+		}
+	}
+	return availableFormats[0];
+}
+```
+### Modo presentación
+El modo presentación es la configuración más importante de la *swap chain*, ya que representa las condiciones actuales de mostrar imágenes en la pantalla. Hay cuatro posibles modos disponibles en Vulkan:
+
+- `VK_PRESENT_MODE_INMEDIATE_KHR`: entregadas por tu aplicación son transferidas a la pantalla directamente, resultando en un *tearing* o rasgado de pantalla.
+- `VK_PRESENT_MODE_FIFO_KHR`: La swap chain está en la cola donde el *display* toma una imagen del frente de la cola 
+cuando el *display* se ha refrescado y le programa inserta imágenes renderizadas en la parte de atrás de la cola. Si la cola
+está al máximo, entonces el programa tendrá que esperar. Es muy similar a la sincronización vertical que encontramos en los videojuegos.
+El momento en el que el *display* se refresca es conocido como *vertical blank*.
+- `VK_PRESENT_MODE_FIFO_RELATED_KHR`: Este modo solo difiere de los previos en que la aplicación llega tarde y la cola está vacía en el último *vertical blank*. En vez de esperar para el siguiente *vertical blank*, 
+la imagen es transferida justamente cuando acaba de llegar. Esto resulta en un viible *tearing*.
+- `VK_PRESENT_MODE_MAILBOX_KHR`: Este es otra variación del segundo modo. En vez de bloquear la aplicación cunado la cola esta llena, las imágenes que están en la cola son
+simplemente remplazadas por unas nuevas. Este modo pude ser usado para renderizar *frames* tan rápido como sea posible mientras 
+evitamos el *tearing*, con lo que nos quedamos menos problemas de latencia que la sincronización estándar vertical. Es común conocerlo como triple búfer, y aunque están compuestos por
+tres búferes, no significa que la tasa de *frames* este desbloqueada.
+
+Solo el modo `VK_PRESENT_MODE_FIFO_KHR` está garantizado de estar disponible, así que tenemos que escribirlo de nuevo en la función que busca 
+mejor modo disponible:
+
+```c++
+VkPresentModeKHR chooseSwapPresentMode(const std:vector<VkPresentModeKHR>&availablePresentModes){
+	for (const auto& availablePresentMode : availablePresenteModes){
+		if (availablePresentMode ==VK_PRESENT_MODE_MAILBOX_KHR){
+			return availablePresentMode;
+		}
+	}
+	return VK_PRESENT_MODE_FIFO_KHR;
+}
+```
+### Swap extendida
+Queda solo la propiedad más importante, por lo cual añadiremos una última función:
+```c++
+VkExtent2D chooseSwapExtent (const VkSurfaceCapabilitiesKHR& capabilities){
+
+}
+```
+El swap extendido es la resolución de las imágenes de la *swap chain* y casi siempre igual a la resolución de la ventana que estamos dibujando en pixeles. 
+El rango de la posibles resoluciones están definidas en la *struct* `VkSurfaceCapabilitiesKHR`. Vulkan nos dice la resolución de la ventana 
+alto y el ancho en el actual miembro `currentExtent`. Sin embargo, algunos gestores de ventanas nos permiten diferir aquí y es indicado por
+la configuración del ancho y el alto en `currentExtent` para un especial valor: el máximo valor de `uint32_t`. En tal caso cogerermos la resolución que más coincida
+con la ventana en los límites `minImageExtent` y el `maxImageExtent`. Pero debemos especificar la resolución en la correcta unidad.
+
+GLFW usa dos unidades de medida: pixeles y coordenadas de pantalla. Por ejemplo, la resolución {WIDTH, HEIGHT} que se especifican antes cuando estábamos
+creando la ventana, está medida en coordenadas. Pero Vulkan trabaja con pixeles, así que la *swap chain* extendida debe especificar en pixeles. 
+Desafortunadamente, si usas la altura del *display* DPI (como el *display* de la Retina de Apple), las coordeanadas de la pantalla no corresponderán con los pixeles.
+En vez de eso, debido al la alta densidad de pìxeles, la resolución de la pantalla en pixeles será más grande que la resolución en las coordenadas de pantalla.
+Así que si Vulkan no arragla la *swap* extendida pro nosotros, no podemos usar el original {WIDTH, HEIGHT}. 
+Por lo tanto debemos usar `glfwGetFramebufferSize` para pedir la resolución de la ventana en pixel antes de ajustarlo hacia el mínimo y el máximo de la imagen extendida.
+```c++
+#include <cstint> //Necesario para uint32_t
+#include <limits> //Necesario para std::numerics_limits
+#include <algorithm> //Necesario para std::clamp
+
+...
+
+VkExtent2d chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities){
+	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()){
+		return capabilities.currentExtent;
+	}
+	}else{
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+
+		VkExtent2D actualExtent = {
+			static_cast<uint32_t>(width),
+			static_cast<uint32_t>(height)
+		};
+
+		actualExtent.width = std::clamp(actualExtent.width, capabilities.maxImageExtent.width);
+		actualExtent.height = std::clamp(acutalExtent.height, capapbilites.minImageExtent.height, capabilites.maxImageExtent.height);
+
+		return actualExtent;
+	}
+}
+```
+La función `clamp` es usada aquí para limitar los valores de `width` y `height` entre los mínimos permitidos y los máximos extendidos que tienen soporte por la implementación.
+#### Resumen
+Configuramos la *swap chain* de manera óptima. Las tres principales configuraciones son:
+
+- **El formato de superficie** que describe la profundidad del color.
+- **El modo de presentación** que establece las condiciones de las imágnenes *swaping* de la pantalla.
+- **Swap extendido** resolución de las imágenes que se muestran en la pantalla.
