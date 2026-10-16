@@ -1216,3 +1216,59 @@ Configuramos la *swap chain* de manera óptima. Las tres principales configuracio
 - **El formato de superficie** que describe la profundidad del color.
 - **El modo de presentación** que establece las condiciones de las imágnenes *swaping* de la pantalla.
 - **Swap extendido** resolución de las imágenes que se muestran en la pantalla.
+
+## Creando la swap chain
+Ahora que tenemos todas las funciones de ayuda para asistirnos con las elecciones que podemos crear durante el tiempo de ejecución, podemos finalmente tener toda la información
+que sea necesaria para crear la *swap chain*.
+
+Creamos la función ``createSwapChain`` para recoger los resultados de esas llamadas y asegurarnos de llamarla
+desde ``initVulkan`` después de la creación de los dispositivos lógicos.
+```c++
+void initVulkan (){
+	createInstance();
+	setupdebugMessenger();
+	createSurface();
+	pickPhysicalDevice();
+	createLogicalDevice();
+	createSwapChain();
+}
+
+void createSwapChain() {
+	CreateSwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+
+	vkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+	VkPresentModelKHR presentMode = chooseSwapPresentMode(swapChinSupport.presentModes);
+	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+}
+```
+Aparte de estas propiedades también podemos decidir cuántas imágenes podríamos albergar en la *swap chain*. 
+La implementación especifica el número mínimo de funciones requeridas:
+```c++
+uint_32 imageCount = swapChainSupport.capabilities.minImageCount;
+```
+Sin embargo, simplemente añadiendo este mínimo significa que a veces tendríamos que esperar al driver para completar las operaciones internas
+antes de que podamos añadir otra imagen para renderizar. Por lo tanto se recomienda devolver al menos más de una imagen que el mínimo.
+```c++
+uint32_t imageCount = swpacChainSupport.capabilities.minImageCount + 1;
+```
+Deberíamos asegurarnos también de no excedernos en el número máximo de imágenes mientras hacemos esto, dónde 0 es un valor especial que significa
+al menos que no hay máximo:
+```c++
+if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount){
+	imageCount = swapChainSupport.capabilities.maxImageCount;
+}
+```
+Como es tradición en Vulkan, crear el objeto de *swap chain* requiere rellenar una larga estructura. Comenzamos con algo muy familiar:
+```c++
+VkSwapChainCreateInfoKHR createInfo{};
+createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+createInfo.surface = surface;
+```
+Después de especificar la superficie de la *swap chain* deberíamos unirla. Para este propósito especificamos los detalles de la *swap chain*:
+```c++
+createInfo.minImageCount = imageCount;
+createInfo.imageFormat = surfaceFormat.format;
+createInfo.imageExtent = extent;
+createInfo.imageArrayLayers = 1;
+createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+```
